@@ -1,302 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, minimum-scale=1, maximum-scale=1">
+    <title>わるきちのおそうじ</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム">
+    <meta property="og:site_name" content="わるきちのおそうじ" />
+    <meta property="og:title" content="わるきちのおそうじ" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hadamak.github.io/warukichi-cleaning/" />
+    <meta property="og:description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム" />
+    <meta property="og:image" content="https://hadamak.github.io/warukichi-cleaning/ogp.png" />
+    <!-- Load custom style sheet -->
+    <link rel="stylesheet" type="text/css" href="theme/love.css">
+  </head>
+  <body>
+    <center>
+      <div>
+        <h1>わるきちのおそうじ</h1>
+        <canvas id="loadingCanvas" oncontextmenu="event.preventDefault()" width="800" height="600"></canvas>
+        <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+      </div>
+    </center>
 
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>わるきちのおそうじ</title>
-	<link rel="icon" href="favicon.ico" type="image/x-icon">
-	<meta name="description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム">
-	<meta property="og:site_name" content="わるきちのおそうじ" />
-	<meta property="og:title" content="わるきちのおそうじ" />
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://hadamak.github.io/warukichi-cleaning/" />
-	<meta property="og:description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム" />
-	<meta property="og:image" content="https://hadamak.github.io/warukichi-cleaning/ogp.png" />
-	<style type="text/css">
-		html,
-		body {
-			background-color: #e0f4fc;
-			margin: 0;
-			height: 100%;
-			font-family: sans-serif;
-			font-size: 18px;
-		}
+    <script type='text/javascript'>
+      function goFullScreen(){
+            var canvas = document.getElementById("canvas");
+            if(canvas.requestFullScreen)
+                canvas.requestFullScreen();
+            else if(canvas.webkitRequestFullScreen)
+                canvas.webkitRequestFullScreen();
+            else if(canvas.mozRequestFullScreen)
+                canvas.mozRequestFullScreen();
+      }
+      function FullScreenHook(){
+        var canvas = document.getElementById("canvas");
+        canvas.width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+        canvas.height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+      }
+      var loadingContext = document.getElementById('loadingCanvas').getContext('2d');
+      function drawLoadingText(text) {
+        var canvas = loadingContext.canvas;
 
-		#wrapper {
-			margin: 0 0 -21px;
-			padding: 1px;
-			min-height: 100%;
-			border-bottom: 21px solid transparent;
-			box-sizing: border-box;
-		}
+        loadingContext.fillStyle = "rgb(142, 195, 227)";
+        loadingContext.fillRect(0, 0, canvas.scrollWidth, canvas.scrollHeight);
 
-		#title {
-			background-color: #ea316e;
-			margin: 9px;
-			padding: .8em;
-			border: 1px solid black;
-			border-radius: 10px;
-			box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.3);
-			text-align: center;
-			color: #f5f5f5;
-		}
+        loadingContext.font = '2em arial';
+        loadingContext.textAlign = 'center'
+        loadingContext.fillStyle = "rgb( 11, 86, 117 )";
+        loadingContext.fillText(text, canvas.scrollWidth / 2, canvas.scrollHeight / 2);
 
-		#main {
-			background-color: #b1e3fa;
-			margin: 9px;
-			padding: 15px 0;
-			border: 1px solid black;
-			border-radius: 10px;
-			box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.3);
-			text-align: center;
-		}
+        loadingContext.fillText("Powered By Emscripten.", canvas.scrollWidth / 2, canvas.scrollHeight / 4);
+        loadingContext.fillText("Powered By LÖVE.", canvas.scrollWidth / 2, canvas.scrollHeight / 4 * 3);
+      }
 
-		#game-container {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			width: 100%;
-			background: transparent;
-			overflow: hidden;
-		}
+      window.onload = function () { window.focus(); };
+      window.onclick = function () { window.focus(); };
 
-		#game-container:fullscreen {
-			background-color: #000;
-			width: 100vw;
-			height: 100vh;
-			margin: 0;
-			padding: 0;
-		}
+      window.addEventListener("keydown", function(e) {
+        // space and arrow keys
+        if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+          e.preventDefault();
+        }
+      }, false);
 
-		#game-container:-webkit-full-screen {
-			background-color: #000;
-			width: 100%;
-			height: 100%;
-		}
+      var Module = {
+        arguments: ["./game.love"],
+        INITIAL_MEMORY: 67108864,
+        printErr: console.error.bind(console),
+        canvas: (function() {
+          var canvas = document.getElementById('canvas');
 
-		canvas {
-			display: block;
-			/* image-rendering: pixelated; */
-		}
+          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+          // application robust, you may want to override this behavior before shipping!
+          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
 
-		#game-container:not(:fullscreen) canvas {
-			max-width: 100%;
-			height: auto;
-		}
+          return canvas;
+        })(),
+        setStatus: function(text) {
+          if (text) {
+            drawLoadingText(text);
+          } else if (Module.remainingDependencies === 0) {
+            document.getElementById('loadingCanvas').style.display = 'none';
+            document.getElementById('canvas').style.visibility = 'visible';
+          }
+        },
+        totalDependencies: 0,
+        remainingDependencies: 0,
+        monitorRunDependencies: function(left) {
+          this.remainingDependencies = left;
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+      };
+      Module.setStatus('Downloading...');
+      window.onerror = function(event) {
+        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+        Module.setStatus('Exception thrown, see JavaScript console');
+        Module.setStatus = function(text) {
+          if (text) Module.printErr('[post-exception status] ' + text);
+        };
+      };
 
-		#fullscreen-btn {
-			margin-top: 10px;
-			padding: 10px 20px;
-			background-color: #ea316e;
-			color: white;
-			border: 1px solid black;
-			border-radius: 5px;
-			cursor: pointer;
-			font-size: 16px;
-			box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.3);
-			transition: background-color 0.2s;
-		}
-
-		#fullscreen-btn:hover {
-			background-color: #ff5e94;
-		}
-
-		#fullscreen-btn:disabled {
-			background-color: #ccc;
-			color: #666;
-			cursor: not-allowed;
-			border-color: #999;
-			box-shadow: none;
-		}
-
-		#footer {
-			background-color: #b1e3fa;
-			padding-top: 3px;
-			height: 17px;
-			border-top: 1px dashed #77A;
-			color: #444;
-			font-size: 9pt;
-			text-align: center;
-			overflow-y: auto;
-		}
-
-		#footer a {
-			color: #77A;
-		}
-
-		#footer a:hover,
-		#footera:active {
-			color: #ea316e;
-		}
-
-		@media (max-width: 850px) {
-			#wrapper {
-				font-size: 80%;
-			}
-
-			#title {
-				padding: .2em;
-			}
-		}
-	</style>
-</head>
-</head>
-
-<body>
-	<div id="wrapper">
-		<h1 id="title">わるきちのおそうじ</h1>
-		<div id="main">
-			スマホ非対応です！すまん
-			<div id="game-container">
-				<canvas id="canvas" width="1280" height="720" style="background:#000;"></canvas>
-			</div>
-			<button id="fullscreen-btn" disabled>ゲーム起動は上の画面をクリック</button>
-		</div>
-	</div>
-	<div id="footer">Made using the <a href="https://love2d.org/" target="_blank">LÖVE Framework</a> (<a
-			href="https://raw.githubusercontent.com/love2d/love/main/license.txt" target="_blank">License</a>) &middot;
-		Packaged using <a href="https://schellingb.github.io/LoveWebBuilder/" target="_blank">LÖVE Web Builder</a></div>
-
-	<script type="text/javascript">
-		function updateCanvasSize() {
-			var container = document.getElementById('game-container');
-			var canvas = document.getElementById('canvas');
-			if (!canvas || !container) return;
-
-			var isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-
-			if (isFullscreen) {
-				var windowWidth = window.innerWidth;
-				var windowHeight = window.innerHeight;
-				var gameRatio = 1280 / 720;
-				var windowRatio = windowWidth / windowHeight;
-				var newWidth, newHeight;
-
-				if (windowRatio > gameRatio) {
-					newHeight = windowHeight;
-					newWidth = newHeight * gameRatio;
-				} else {
-					newWidth = windowWidth;
-					newHeight = newWidth / gameRatio;
-				}
-				canvas.style.width = newWidth + 'px';
-				canvas.style.height = newHeight + 'px';
-			} else {
-				canvas.style.width = '';
-				canvas.style.height = '';
-			}
-		}
-
-		document.getElementById('fullscreen-btn').addEventListener('click', function () {
-			var container = document.getElementById('game-container');
-			if (container.requestFullscreen) container.requestFullscreen();
-			else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
-			else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
-			else if (container.msRequestFullscreen) container.msRequestFullscreen();
-		});
-
-		window.addEventListener('resize', updateCanvasSize);
-		document.addEventListener('fullscreenchange', updateCanvasSize);
-		document.addEventListener('webkitfullscreenchange', updateCanvasSize);
-		document.addEventListener('mozfullscreenchange', updateCanvasSize);
-		document.addEventListener('MSFullscreenChange', updateCanvasSize);
-	</script>
-
-	<script type="text/javascript">(function () {
-			var TXT =
-			{
-				PLAYBTN: 'Click here to launch the game',
-				LOAD: 'Downloading Game',
-				PARSE: 'Preparing Game',
-				EXECUTE: 'Starting Game',
-				DLERROR: 'Error while downloading game data.\nCheck your internet connection.',
-				NOWEBGL: 'Your browser or graphics card does not seem to support <a href="http://khronos.org/webgl/wiki/Getting_a_WebGL_Implementation">WebGL</a>.<br>Find out how to get it <a href="http://get.webgl.org/">here</a>.',
-			};
-			var canvas = document.getElementById('canvas'), ctx;
-			var Msg = function (m) {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				ctx.fillStyle = '#888';
-				for (var i = 0, a = m.split('\n'), n = a.length; i != n; i++)
-					ctx.fillText(a[i], canvas.width / 2, canvas.height / 2 - (n - 1) * 20 + 10 + i * 40);
-			};
-			var Fail = function (m) {
-				canvas.outerHTML = '<div style="max-width:90%;width:' + canvas.clientWidth + 'px;height:' + canvas.clientHeight + 'px;background:#000;display:table-cell;vertical-align:middle"><div style="background-color:#FFF;color:#000;padding:1.5em;max-width:640px;width:80%;margin:auto;text-align:center">' + TXT.NOWEBGL + (m ? '<br><br>' + m : '') + '</div></div>';
-			};
-			var DoExecute = function () {
-				Msg(TXT.EXECUTE);
-				Module.canvas = canvas.cloneNode(false);
-				Module.canvas.oncontextmenu = function (e) { e.preventDefault() };
-				Module.setWindowTitle = function (title) { };
-				Module.postRun = function () {
-					if (!Module.noExitRuntime) { Fail(); return; }
-					canvas.parentNode.replaceChild(Module.canvas, canvas);
-					Txt = Msg = ctx = canvas = null;
-					Module.canvas.focus();
-
-					if (typeof updateCanvasSize === 'function') updateCanvasSize();
-
-					var btn = document.getElementById('fullscreen-btn');
-					if (btn) {
-						btn.disabled = false;
-						btn.textContent = "フルスクリーンで遊ぶ";
-					}
-				};
-				setTimeout(function () { Module.run(['/p']); }, 50);
-			};
-			var DoLoad = function () {
-				var btn = document.getElementById('fullscreen-btn');
-				if (btn) btn.textContent = "ロード中...";
-
-				Msg(TXT.LOAD);
-				var xhr = new XMLHttpRequest();
-				xhr.open('GET', 'index.js');
-				xhr.onprogress = function (e) {
-					if (!e.lengthComputable || ctx.pCnt++ < 5) return;
-					var x = canvas.width / 2 - 150, y = canvas.height * .6, w = Math.min(e.loaded / e.total, 1) * 300, g = ctx.createLinearGradient(x, 0, x + w, 0);
-					g.addColorStop(0, '#72d3ff'); g.addColorStop(1, '#a2d4ea');
-					ctx.fillStyle = '#1497ce'; ctx.fillRect(x - 2, y - 2, 304, 28);
-					ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x, y, 300, 24);
-					ctx.fillStyle = g; ctx.fillRect(x, y, w, 24);
-				};
-				xhr.onerror = xhr.onabort = function () { Msg(TXT.DLERROR); canvas.disabled = false; };
-				xhr.onload = function () {
-					if (xhr.status != 200) { Msg(TXT.DLERROR + '<br>Status: ' + xhr.statusText); canvas.disabled = false; return; }
-					Msg(TXT.PARSE);
-					setTimeout(function () {
-						window.onerror = function (e, u, l) { Fail(e + '<br>(' + u + ':' + l + ')'); };
-						Module = { TOTAL_MEMORY: 1024 * 1024 * 64, TOTAL_STACK: 1024 * 1024 * 2, currentScriptUrl: '-', preInit: DoExecute };
-						var s = document.createElement('script'), d = document.documentElement;
-						s.textContent = xhr.response;
-						d.appendChild(s);
-						d.removeChild(s);
-						xhr = xhr.response = s = s.textContent = null;
-					}, 50);
-				};
-				xhr.send();
-			}
-			var DoSetup = function () {
-				canvas.onclick = function () {
-					if (canvas.disabled) return;
-					canvas.disabled = true;
-					canvas.scrollIntoView();
-					ctx.pCnt = 0;
-					DoLoad();
-				};
-				ctx.fillStyle = '#888';
-				ctx.fillRect(canvas.width / 2 - 254, canvas.height / 2 - 104, 508, 208);
-				ctx.fillStyle = '#333';
-				ctx.fillRect(canvas.width / 2 - 250, canvas.height / 2 - 100, 500, 200);
-				ctx.fillStyle = '#888';
-				ctx.fillText(TXT.PLAYBTN, canvas.width / 2, canvas.height / 2 + 10);
-			};
-			canvas.oncontextmenu = function (e) { e.preventDefault() };
-			ctx = canvas.getContext('2d');
-			ctx.font = '30px sans-serif';
-			ctx.textAlign = 'center';
-			DoSetup();
-		})()</script>
-
-</body>
-
+      var applicationLoad = function(e) {
+        Love(Module);
+      }
+    </script>
+    <script type="text/javascript" src="game.js"></script>
+    <script async type="text/javascript" src="love.js" onload="applicationLoad(this)"></script>
+    <footer>
+      <p>Built with <a href="https://github.com/Davidobot/love.js">love.js</a> <button onclick="goFullScreen();">Go Fullscreen</button><br>Hint: Reload the page if screen is blank</p>
+    </footer>
+  </body>
 </html>
