@@ -1,118 +1,218 @@
 <!doctype html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, minimum-scale=1, maximum-scale=1">
-    <title>わるきちのおそうじ</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <meta name="description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム">
-    <meta property="og:site_name" content="わるきちのおそうじ" />
-    <meta property="og:title" content="わるきちのおそうじ" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://hadamak.github.io/warukichi-cleaning/" />
-    <meta property="og:description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム" />
-    <meta property="og:image" content="https://hadamak.github.io/warukichi-cleaning/ogp.png" />
-    <!-- Load custom style sheet -->
-    <link rel="stylesheet" type="text/css" href="theme/love.css">
-  </head>
-  <body>
-    <center>
-      <div>
-        <h1>わるきちのおそうじ</h1>
-        <canvas id="loadingCanvas" oncontextmenu="event.preventDefault()" width="800" height="600"></canvas>
-        <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
-      </div>
-    </center>
 
-    <script type='text/javascript'>
-      function goFullScreen(){
-            var canvas = document.getElementById("canvas");
-            if(canvas.requestFullScreen)
-                canvas.requestFullScreen();
-            else if(canvas.webkitRequestFullScreen)
-                canvas.webkitRequestFullScreen();
-            else if(canvas.mozRequestFullScreen)
-                canvas.mozRequestFullScreen();
-      }
-      function FullScreenHook(){
-        var canvas = document.getElementById("canvas");
-        canvas.width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-        canvas.height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-      }
-      var loadingContext = document.getElementById('loadingCanvas').getContext('2d');
-      function drawLoadingText(text) {
-        var canvas = loadingContext.canvas;
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>わるきちのおそうじ</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta name="description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム">
+  <meta property="og:site_name" content="わるきちのおそうじ" />
+  <meta property="og:title" content="わるきちのおそうじ" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://hadamak.github.io/warukichi-cleaning/" />
+  <meta property="og:description" content="めぶき☆ちゃんねるのキャラクター「わるきち」のブラウザゲーム" />
+  <meta property="og:image" content="https://hadamak.github.io/warukichi-cleaning/ogp.png" />
+  <style type="text/css">
+    h1 {
+      font-family: arial;
+      color: rgb(11, 86, 117);
+      font-size: 2em;
+      margin: 10px;
+    }
 
-        loadingContext.fillStyle = "rgb(142, 195, 227)";
-        loadingContext.fillRect(0, 0, canvas.scrollWidth, canvas.scrollHeight);
+    body {
+      text-align: center;
+      font-family: arial;
+      margin: 0;
+      padding: 0;
+      padding-bottom: 60px;
+      /* Space for footer */
+      background-color: rgb(154, 205, 237);
+      color: rgb(28, 78, 104);
+    }
 
-        loadingContext.font = '2em arial';
-        loadingContext.textAlign = 'center'
-        loadingContext.fillStyle = "rgb( 11, 86, 117 )";
-        loadingContext.fillText(text, canvas.scrollWidth / 2, canvas.scrollHeight / 2);
+    #canvas {
+      max-width: 100%;
+    }
 
-        loadingContext.fillText("Powered By Emscripten.", canvas.scrollWidth / 2, canvas.scrollHeight / 4);
-        loadingContext.fillText("Powered By LÖVE.", canvas.scrollWidth / 2, canvas.scrollHeight / 4 * 3);
-      }
+    #fullscreen-btn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #ea316e;
+      color: white;
+      border: 1px solid black;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.3);
+      transition: background-color 0.2s;
+    }
 
-      window.onload = function () { window.focus(); };
-      window.onclick = function () { window.focus(); };
+    #fullscreen-btn:hover {
+      background-color: #ff5e94;
+    }
 
-      window.addEventListener("keydown", function(e) {
-        // space and arrow keys
-        if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-          e.preventDefault();
+    footer {
+      font-family: arial;
+      font-size: 12px;
+      padding: 10px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(154, 205, 237, 0.95);
+      text-align: center;
+    }
+
+    footer p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>わるきちのおそうじ</h1>
+  <div id="game-container">
+    <canvas id="loadingCanvas" oncontextmenu="event.preventDefault()"></canvas>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+  </div>
+  <p>7つのおそうじがおわったら1つめにもどります</p>
+
+  <footer>
+    <button id="fullscreen-btn">フルスクリーンで遊ぶ</button>
+    <p>Built with <a href="https://github.com/Davidobot/love.js" target="_blank">love.js</a> &middot; Powered by the <a
+        href="https://love2d.org/" target="_blank">LÖVE Framework</a> (<a
+        href="https://raw.githubusercontent.com/love2d/love/main/license.txt" target="_blank">License</a>)</p>
+  </footer>
+
+  <script type="text/javascript">
+    function updateCanvasSize() {
+      var container = document.getElementById('game-container');
+      var canvas = document.getElementById('canvas');
+      if (!canvas || !container) return;
+
+      var isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+      if (isFullscreen) {
+        var windowWidth = window.innerWidth;
+        var windowHeight = window.innerHeight;
+        var gameRatio = 1280 / 720;
+        var windowRatio = windowWidth / windowHeight;
+        var newWidth, newHeight;
+
+        if (windowRatio > gameRatio) {
+          newHeight = windowHeight;
+          newWidth = newHeight * gameRatio;
+        } else {
+          newWidth = windowWidth;
+          newHeight = newWidth / gameRatio;
         }
-      }, false);
-
-      var Module = {
-        arguments: ["./game.love"],
-        INITIAL_MEMORY: 67108864,
-        printErr: console.error.bind(console),
-        canvas: (function() {
-          var canvas = document.getElementById('canvas');
-
-          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
-          // application robust, you may want to override this behavior before shipping!
-          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
-
-          return canvas;
-        })(),
-        setStatus: function(text) {
-          if (text) {
-            drawLoadingText(text);
-          } else if (Module.remainingDependencies === 0) {
-            document.getElementById('loadingCanvas').style.display = 'none';
-            document.getElementById('canvas').style.visibility = 'visible';
-          }
-        },
-        totalDependencies: 0,
-        remainingDependencies: 0,
-        monitorRunDependencies: function(left) {
-          this.remainingDependencies = left;
-          this.totalDependencies = Math.max(this.totalDependencies, left);
-          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-        }
-      };
-      Module.setStatus('Downloading...');
-      window.onerror = function(event) {
-        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
-        Module.setStatus('Exception thrown, see JavaScript console');
-        Module.setStatus = function(text) {
-          if (text) Module.printErr('[post-exception status] ' + text);
-        };
-      };
-
-      var applicationLoad = function(e) {
-        Love(Module);
+        canvas.style.width = newWidth + 'px';
+        canvas.style.height = newHeight + 'px';
+      } else {
+        canvas.style.width = '';
+        canvas.style.height = '';
       }
-    </script>
-    <script type="text/javascript" src="game.js"></script>
-    <script async type="text/javascript" src="love.js" onload="applicationLoad(this)"></script>
-    <footer>
-      <p>Built with <a href="https://github.com/Davidobot/love.js">love.js</a> <button onclick="goFullScreen();">Go Fullscreen</button><br>Hint: Reload the page if screen is blank</p>
-    </footer>
-  </body>
+    }
+
+    document.getElementById('fullscreen-btn').addEventListener('click', function () {
+      var container = document.getElementById('game-container');
+      if (container.requestFullscreen) container.requestFullscreen();
+      else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
+      else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+      else if (container.msRequestFullscreen) container.msRequestFullscreen();
+    });
+
+    window.addEventListener('resize', updateCanvasSize);
+    document.addEventListener('fullscreenchange', updateCanvasSize);
+    document.addEventListener('webkitfullscreenchange', updateCanvasSize);
+    document.addEventListener('mozfullscreenchange', updateCanvasSize);
+    document.addEventListener('MSFullscreenChange', updateCanvasSize);
+  </script>
+  <script type='text/javascript'>
+    var loadingContext = document.getElementById('loadingCanvas').getContext('2d');
+    function drawLoadingText(text) {
+      var canvas = loadingContext.canvas;
+
+      // Set canvas size to match container (responsive)
+      var container = document.getElementById('game-container');
+      var containerWidth = container.clientWidth || 800;
+      var containerHeight = Math.min(window.innerHeight - 120, containerWidth * 0.75) || 600;
+
+      canvas.width = containerWidth;
+      canvas.height = containerHeight;
+
+      loadingContext.fillStyle = "rgb(142, 195, 227)";
+      loadingContext.fillRect(0, 0, canvas.width, canvas.height);
+
+      var fontSize = Math.min(containerWidth / 20, 32);
+      loadingContext.font = fontSize + 'px arial';
+      loadingContext.textAlign = 'center'
+      loadingContext.fillStyle = "rgb( 11, 86, 117 )";
+      loadingContext.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      loadingContext.fillText("Powered By Emscripten.", canvas.width / 2, canvas.height / 4);
+      loadingContext.fillText("Powered By LÖVE.", canvas.width / 2, canvas.height / 4 * 3);
+    }
+
+    window.onload = function () { window.focus(); };
+    window.onclick = function () { window.focus(); };
+
+    window.addEventListener("keydown", function (e) {
+      // space and arrow keys
+      if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+      }
+    }, false);
+
+    var Module = {
+      arguments: ["./game.love"],
+      INITIAL_MEMORY: 67108864,
+      printErr: console.error.bind(console),
+      canvas: (function () {
+        var canvas = document.getElementById('canvas');
+
+        // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+        // application robust, you may want to override this behavior before shipping!
+        // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+        canvas.addEventListener("webglcontextlost", function (e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+
+        return canvas;
+      })(),
+      setStatus: function (text) {
+        if (text) {
+          drawLoadingText(text);
+        } else if (Module.remainingDependencies === 0) {
+          document.getElementById('loadingCanvas').style.display = 'none';
+          document.getElementById('canvas').style.visibility = 'visible';
+        }
+      },
+      totalDependencies: 0,
+      remainingDependencies: 0,
+      monitorRunDependencies: function (left) {
+        this.remainingDependencies = left;
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+      }
+    };
+    Module.setStatus('Downloading...');
+    window.onerror = function (event) {
+      // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+      Module.setStatus('Exception thrown, see JavaScript console');
+      Module.setStatus = function (text) {
+        if (text) Module.printErr('[post-exception status] ' + text);
+      };
+    };
+
+    var applicationLoad = function (e) {
+      Love(Module);
+    }
+  </script>
+  <script type="text/javascript" src="game.js"></script>
+  <script async type="text/javascript" src="love.js" onload="applicationLoad(this)"></script>
+
+</body>
+
 </html>
